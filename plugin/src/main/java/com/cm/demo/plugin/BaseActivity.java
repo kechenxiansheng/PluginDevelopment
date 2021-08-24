@@ -15,7 +15,8 @@ import com.cm.demo.pf.AppInterface;
 import androidx.annotation.NonNull;
 
 /**
- * 这是插件的基类，所有的activity都要继承这个类，
+ * 这是插件的基类，所有的activity都要继承这个类。实现了定义插件标准的接口
+ *
  * */
 public class BaseActivity extends Activity implements AppInterface {
     private static final String TAG = "App-plugin-BaseAct";
@@ -86,9 +87,12 @@ public class BaseActivity extends Activity implements AppInterface {
         return false;
     }
 
+    //按下返回键
     @Override
     public void onBackPressed() {
-
+        if(mActivity == null){
+            super.onBackPressed();
+        }
     }
 
     @Override

@@ -13,13 +13,14 @@ import com.cm.demo.pf.AppInterface;
 import java.lang.reflect.Constructor;
 
 /**
- * 占位的activity
+ * 占位activity
+ * 用于宿主启动插件时占位，并确定跳转到插件的具体activity
  */
 public class ProxyActivity extends AppCompatActivity {
 
     private static final String TAG = "App-Main-ProxyActivity";
 
-    /** 要跳转的activity的name */
+    //要跳转的具体activity的类路径
     private String className = "";
     private static AppInterface appInterface;
 
@@ -37,8 +38,8 @@ public class ProxyActivity extends AppCompatActivity {
          * 因为插件app没有被安装！ 这里我们调用重写的classLoader
          */
         try {
-            Class activityClass = getClassLoader().loadClass(className);
-            Constructor constructor = activityClass.getConstructor();
+            Class<?> activityClass = getClassLoader().loadClass(className);
+            Constructor<?> constructor = activityClass.getConstructor();
             Object instance = constructor.newInstance();
 
             appInterface = (AppInterface) instance;

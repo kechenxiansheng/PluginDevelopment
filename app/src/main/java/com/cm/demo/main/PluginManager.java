@@ -18,7 +18,10 @@ import java.lang.reflect.Method;
 import dalvik.system.DexClassLoader;
 
 /**
- * HookManager 的代码 是核心 主要加载我们的插件apk和插件资源的
+ * HookManager 的代码是整个插件化的核心：
+ * 1、下载插件apk并存储
+ * 2、加载插件apk信息
+ * 3、加载插件资源
  */
 public class PluginManager {
     @SuppressLint("StaticFieldLeak")
@@ -62,7 +65,13 @@ public class PluginManager {
         return entryName;
     }
 
-    /** 构造classLoader */
+    /** 创建加载插件类的ClassLoader
+     *  DexClassLoader 参数说明：
+     *      dexPath： 指目标类所在的jar/apk文件路径, 多个路径使用 File.pathSeparator分隔, Android里面默认为 ":"
+     *      optimizedDirectory： 解压出的dex文件的存放路径，以免被注入攻击，不可存放在外置存储。
+     *      libraryPath ：目标类中的C/C++库存放路径。
+     *      parent： 父类装载器
+     * */
     private void setClassLoader(String path) {
         //dex的缓存路径
         File dexOutFile = context.getDir("dex", Context.MODE_PRIVATE);
@@ -73,36 +82,40 @@ public class PluginManager {
         return dexClassLoader;
     }
 
-    /** 构造resources */
+    /** 创建获取插件资源的Resources
+     *  Resources() 参数说明（不是很明白，暂且直接这么用吧。解释是源码的翻译）：
+     *      assets  资源管理器对象
+     *      metrics 当前资源对象的有效显示指标
+     *      config  当前资源对象有效的当前配置。
+     * */
     public Resources getResources() {
         return resources;
     }
     public void setResources(String path) {
-        //由于构建resources必须要传入AssetManager，这里先构建一个AssetManager
         try {
+            //由于构建resources必须要传入AssetManager，这里先构建一个AssetManager
             AssetManager assetManager = AssetManager.class.newInstance();
             Method addAssetPath = AssetManager.class.getMethod("addAssetPath", String.class);
             addAssetPath.invoke(assetManager, path);
             resources = new Resources(assetManager, context.getResources().getDisplayMetrics(), context.getResources().getConfiguration());
             Log.d(TAG, "setResources end : " + (resources != null));
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
     }
 
 
-    /** 获取插件路径 */
+    /** 下载插件，存储获取插件存储路径 */
     public String getPluginPath() {
         FileInputStream is = null;
         FileOutputStream os = null;
         try {
-            // 假如这里是从网络获取的插件 我们直接从sd卡获取 然后读取到我们的cache目录
+            //TODO 假如这里是从网络获取的插件，我们直接从assets中获取，并放在存储中
             String pluginName = "pd_plugin.apk";
             File pluginDir = context.getExternalFilesDir("plugin");
             String pluginPath = new File(pluginDir, pluginName).getAbsolutePath();
             Log.d(TAG, "loadPlugin: pluginDir = " + pluginDir);
             Log.d(TAG, "loadPlugin: pluginPath = " + pluginPath);
-            Log.d(TAG, "loadPlugin: getExternalStorageDirectory = " + Environment.getExternalStorageDirectory());
             File file = new File(pluginPath);
             if (file.exists()) {
                 boolean result = file.delete();
@@ -134,49 +147,7 @@ public class PluginManager {
             return pluginPath;
         } catch (Exception e) {
             e.printStackTrace();
-        }finally {
-            try {
-                if(os != null){
-                    os.close();
-                }
-                if(is != null){
-                    is.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
         return "";
     }
-
-//    private void loadPathToPlugin(Activity activity) {
-//        File filesDir = activity.getExternalFilesDir("plugin");
-////        File filesDir = activity.getDir("plugin", activity.MODE_PRIVATE);
-//        String name = "pd_plugin.apk";
-//        String path = new File(filesDir, name).getAbsolutePath();
-//
-//        //然后我们开始加载我们的apk 使用DexClassLoader
-//        File dexOutDir = activity.getDir("dex", activity.MODE_PRIVATE);
-//        loader = new DexClassLoader(path, dexOutDir.getAbsolutePath(), null, activity.getClassLoader());
-//
-//        //通过 PackageManager 来获取插件的包体信息，以便获取第一个activity是哪一个
-//        PackageManager packageManager = activity.getPackageManager();
-//        packageInfo = packageManager.getPackageArchiveInfo(path, PackageManager.GET_ACTIVITIES);
-//
-//
-//        //然后开始加载我们的资源 肯定要使用Resource 但是它是AssetManager创建出来的 就是AssertManager 有一个addAssertPath 方法，但是是私有的，所以使用反射
-//        Class<?> assetManagerClass = AssetManager.class;
-//        try {
-//            AssetManager assetManager = (AssetManager) assetManagerClass.newInstance();
-//            Method addAssetPathMethod = assetManagerClass.getMethod("addAssetPath", String.class);
-//            addAssetPathMethod.setAccessible(true);
-//            addAssetPathMethod.invoke(assetManager, path);
-//            //在创建一个Resource
-//            resources = new Resources(assetManager, activity.getResources().getDisplayMetrics(), activity.getResources().getConfiguration());
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
-
 }

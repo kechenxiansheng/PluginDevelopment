@@ -7,6 +7,8 @@ import android.view.View;
 
 /**
  * 定义插件标准
+ * 1、定义方法是activity的生命周期和函数
+ * 2、宿主app需主动调用onAttach和onCreate。onAttach传入宿主的上下文，onCreate传入Bundle启动插件activity
  */
 public interface AppInterface {
 

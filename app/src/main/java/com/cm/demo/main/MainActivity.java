@@ -41,9 +41,8 @@ public class MainActivity extends AppCompatActivity {
      * 加载插件
      */
     private void loadPlugin() {
-//        File file = new File(getExternalFilesDir("plugin"), "pd_plugin.apk");
-//        PluginManager.getInstance().loadPath(file.getAbsoluteFile().getPath());
-        PluginManager.getInstance().loadPath(PluginManager.getInstance().getPluginPath());
+        String path = PluginManager.getInstance().getPluginPath();
+        PluginManager.getInstance().loadPath(path);
         Toast.makeText(this, "加载完成", Toast.LENGTH_LONG).show();
     }
 
